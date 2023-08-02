@@ -163,7 +163,7 @@ SocketIoEngine.prototype.step = function (requestSpec, ee) {
     ee.emit('counter', 'engine.socketio.emit', 1);
     ee.emit('rate', 'engine.socketio.emit_rate');
     let startedAt = process.hrtime();
-    let socketio = context.sockets[requestSpec.namespace] || null;
+    let socketio = context.sockets[requestSpec._namespace] || null;
 
     if (!(requestSpec.emit && socketio)) {
       debug('invalid arguments');
@@ -262,8 +262,8 @@ SocketIoEngine.prototype.step = function (requestSpec, ee) {
   };
 
   function preStep(context, callback){
-    // Set default namespace in emit action
-    requestSpec.namespace = template(requestSpec.namespace, context) || "";
+    // Set namespace value in emit action, preserving the original value for dynamic variable namespace support
+    requestSpec._namespace = template(requestSpec.namespace, context) || "";
 
     let connectionOnly = requestSpec?.connect
 
@@ -272,7 +272,7 @@ SocketIoEngine.prototype.step = function (requestSpec, ee) {
       connectionOnly = requestSpec.reconnect ? {} : undefined
     }
 
-    self.loadContextSocket(requestSpec.namespace, connectionOnly, context, function(err, socket) {
+    self.loadContextSocket(requestSpec._namespace, connectionOnly, context, function(err, socket) {
       if(err) {
         debug(err);
         ee.emit('error', err.message);
